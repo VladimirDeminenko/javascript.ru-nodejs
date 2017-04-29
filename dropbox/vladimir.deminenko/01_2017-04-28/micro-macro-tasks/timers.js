@@ -61,7 +61,7 @@ new Promise((resolve, reject) => {
         }
     )
     .catch(error => {
-        console.log('9.3. new Promise.resolve(asyncFx(%s)) ERROR: %s', value1, error.message);
+        console.log('9.3. new Promise.reject(asyncFx(%s)) ERROR: %s', value1, error.message);
     });
 
 
@@ -81,7 +81,7 @@ new Promise((resolve, reject) => {
         }
     )
     .catch(error => {
-        console.log('10.3. new Promise.resolve(asyncFx(%s)) ERROR: %s', value2, error.message);
+        console.log('10.3. new Promise.reject(asyncFx(%s)) ERROR: %s', value2, error.message);
     });
 
 
