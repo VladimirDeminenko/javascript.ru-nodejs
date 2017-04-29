@@ -3,11 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_PATH=./handlers:./modules node index.js"
-  },
-  "author": "",
+  "author": "Vladimir Deminenko",
   "license": "ISC",
   "dependencies": {
     "aws": "0.0.3-2",

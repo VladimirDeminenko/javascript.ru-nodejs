@@ -1,3 +1,3 @@
 const log = msg => console.log(msg);
 
-log('hello');
+log("hello");

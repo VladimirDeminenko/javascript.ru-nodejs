@@ -12,6 +12,9 @@ const server = createServer(function(req, res) {
     server.destroy(() => {
       console.log("closed");
     });
+    // server.close(() => {
+    //   console.log("closed");
+    // });
 
     break;
 
@@ -22,6 +25,15 @@ const server = createServer(function(req, res) {
 });
 
 const connections = {}
+let id = 0;
+server.on('connection', conn => {
+  id++;
+  connections[id] = conn;
+
+  conn.on('close', () => {
+    delete connections[id];
+  });
+});
 
 // track is connections are busy, kill them as they finish working
 server.on('request', function(req, res) {

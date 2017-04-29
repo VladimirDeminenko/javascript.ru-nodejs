@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "micro-macro-tasks": "nodemon ./01_2017-04-28/micro-macro-tasks",
+    "micro-macro-tasks-2": "nodemon ./01_2017-04-28/micro-macro-tasks/index2.js",
+    "micro-macro-tasks-timers": "nodemon ./01_2017-04-28/micro-macro-tasks/timers.js",
+    "server-count": "set NODE_PATH=./01_2017-04-28/server-count/modules; && nodemon ./01_2017-04-28/server-count",
+    "server-count-inspect": "set NODE_PATH=./01_2017-04-28/server-count/modules; && nodemon --inspect ./01_2017-04-28/server-count"
+  }
+}
