@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmitOnError": true,
+    "noImplicitAny": false,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "strictNullChecks": false,
+    "target": "es2017",
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
