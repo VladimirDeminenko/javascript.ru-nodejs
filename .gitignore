@@ -40,8 +40,11 @@ testem.log
 .DS_Store
 Thumbs.db
 
-#Dropbox
+# Dropbox
 .dropbox.cache
 .dropbox
 desktop.ini
 /dropbox/vladimir.deminenko/01_2017-04-28/homework/get-post-server-task/dist/
+
+# ts-node-boilerplate
+ts-node-boilerplate
