@@ -50,12 +50,10 @@ let server = http.createServer((req, res) => {
 
             return;
         }
-        case
-        'POST': {
+        case 'POST': {
             break;
         }
-        case
-        'DELETE': {
+        case 'DELETE': {
             break;
         }
         default: {
