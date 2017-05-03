@@ -12,51 +12,41 @@ const PORT: number = 3000;
 const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
 
 var server = http.createServer((req, res) => {
-        let message: string;
-        res.statusCode = 200;
+    res.statusCode = 200;
 
-        if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
+    if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
+        res.statusCode = 400;
+        res.end(getMessage(req, res));
+
+        return;
+    }
+
+    switch (req.method) {
+        case 'GET': {
+            break;
+        }
+        case
+        'POST': {
+            break;
+        }
+        case
+        'DELETE': {
+            break;
+        }
+        default: {
             res.statusCode = 400;
-            res.end(getMessage(res.statusCode));
-
-            return;
         }
+    }
 
-        const FILE_NAME: string[] = req.url.split('/').slice(-1);
-
-        switch (req.method) {
-            case 'GET': {
-                message = `GET file: ${FILE_NAME}`;
-                break;
-            }
-            case
-            'POST': {
-                message = `POST file: ${FILE_NAME}`;
-                break;
-            }
-            case
-            'DELETE': {
-                message = `DELETE file: ${FILE_NAME}`;
-                break;
-            }
-            default: {
-                message = `${req.method} isn't supported`;
-                res.statusCode = 400;
-            }
-
-        }
-
-        message += `; status: ${getMessage(res.statusCode)}`;
-        console.log(message);
-
-        res.end(message);
-    })
-;
+    res.end(getMessage(req, res));
+});
 
 server.listen(PORT, () => {
     console.log(`server starts on port ${PORT}.`);
 });
 
-const getMessage = (statusCode: number): string => {
-    return http.STATUS_CODES[`${statusCode}`];
+const getMessage = (req, res): string => {
+    const FILE_NAME: string = req.url.split('/').slice(-1)[0];
+
+    return `${req.method} file ${FILE_NAME}; status: ${http.STATUS_CODES[res.statusCode]}.`;
 };
