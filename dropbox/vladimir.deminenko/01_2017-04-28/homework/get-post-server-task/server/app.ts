@@ -3,31 +3,33 @@
  * Created by Vladimir Deminenko on 01.05.2017
  */
 
-import url = require("url");
 import fs = require("fs");
 import http = require("http");
 import mime = require("mime");
 
-const PORT: number = 3001;
-const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
+const PORT: number = 3000;
 
-let fileName: string;
+let server = http.createServer((req, res) => {
+    const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
+    const OPTIONS = {
+        'autoClose': true
+    };
 
-var server = http.createServer((req, res) => {
-    fileName = req.url.split('/').slice(-1)[0];
-    res.statusCode = 200;
+    let fileName: string = req.url.split('/').slice(-1)[0];
 
     if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
         res.statusCode = 400;
         return res.end(getMessage(req, res, fileName));
     }
 
+    res.statusCode = 200;
+
     switch (req.method) {
         case 'GET': {
             let path = `./files/${fileName}`;
             res.setHeader('Content-Type', mime.lookup(path));
 
-            let file = fs.createReadStream(path, {'encoding': 'utf-8', 'autoClose': true});
+            let file = fs.createReadStream(path, OPTIONS);
 
             file.on("open", () => {
                 file.pipe(res);
