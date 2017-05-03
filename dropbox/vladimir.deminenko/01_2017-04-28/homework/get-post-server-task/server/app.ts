@@ -11,12 +11,15 @@ import mime = require("mime");
 const PORT: number = 3000;
 const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
 
+let fileName: string;
+
 var server = http.createServer((req, res) => {
+    fileName = req.url.split('/').slice(-1)[0];
     res.statusCode = 200;
 
     if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
         res.statusCode = 400;
-        res.end(getMessage(req, res));
+        res.end(getMessage(req, res, fileName));
 
         return;
     }
@@ -38,15 +41,13 @@ var server = http.createServer((req, res) => {
         }
     }
 
-    res.end(getMessage(req, res));
+    res.end(getMessage(req, res, fileName));
 });
 
 server.listen(PORT, () => {
     console.log(`server starts on port ${PORT}.`);
 });
 
-const getMessage = (req, res): string => {
-    const FILE_NAME: string = req.url.split('/').slice(-1)[0];
-
-    return `${req.method} file ${FILE_NAME}; status: ${http.STATUS_CODES[res.statusCode]}.`;
+const getMessage = (req, res, aFileName: string): string => {
+    return `${req.method} file "${aFileName}"; status: ${http.STATUS_CODES[res.statusCode]}.`;
 };
