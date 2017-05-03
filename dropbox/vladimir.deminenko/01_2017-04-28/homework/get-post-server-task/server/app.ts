@@ -35,8 +35,7 @@ var server = http.createServer((req, res) => {
                 break;
             }
             case
-            'DELETE'
-            : {
+            'DELETE': {
                 message = `delete file: ${FILE_NAME}`;
                 break;
             }
