@@ -8,7 +8,7 @@ import fs = require("fs");
 import http = require("http");
 import mime = require("mime");
 
-const PORT: number = 3000;
+const PORT: number = 3001;
 const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
 
 let fileName: string;
@@ -19,14 +19,34 @@ var server = http.createServer((req, res) => {
 
     if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
         res.statusCode = 400;
-        res.end(getMessage(req, res, fileName));
-
-        return;
+        return res.end(getMessage(req, res, fileName));
     }
 
     switch (req.method) {
         case 'GET': {
-            break;
+            let path = `./files/${fileName}`;
+            res.setHeader('Content-Type', mime.lookup(path));
+
+            let file = fs.createReadStream(path, {'encoding': 'utf-8', 'autoClose': true});
+
+            file.on("open", () => {
+                file.pipe(res);
+            });
+
+            file.on("error", (error) => {
+                res.statusCode = 400;
+
+                if (error.code === 'ENOENT') {
+                    let tmp = error.message.split('\'')[0];
+
+                    res.end(`${tmp}"${fileName}"`);
+                }
+                else {
+                    res.end(getMessage(req, res, fileName));
+                }
+            });
+
+            return;
         }
         case
         'POST': {
