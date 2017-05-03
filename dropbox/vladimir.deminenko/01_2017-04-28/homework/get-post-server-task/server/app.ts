@@ -26,26 +26,27 @@ var server = http.createServer((req, res) => {
 
         switch (req.method) {
             case 'GET': {
-                message = `get file: ${FILE_NAME}`;
+                message = `GET file: ${FILE_NAME}`;
                 break;
             }
             case
             'POST': {
-                message = `post file: ${FILE_NAME}`;
+                message = `POST file: ${FILE_NAME}`;
                 break;
             }
             case
             'DELETE': {
-                message = `delete file: ${FILE_NAME}`;
+                message = `DELETE file: ${FILE_NAME}`;
                 break;
             }
             default: {
+                message = `${req.method} isn't supported`;
                 res.statusCode = 400;
             }
 
         }
 
-        message = getMessage(res.statusCode);
+        message += `; status: ${getMessage(res.statusCode)}`;
         console.log(message);
 
         res.end(message);
