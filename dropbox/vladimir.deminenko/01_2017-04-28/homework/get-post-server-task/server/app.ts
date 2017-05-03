@@ -12,40 +12,52 @@ const PORT: number = 3000;
 const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
 
 var server = http.createServer((req, res) => {
-    let message: string = 'Bad Request';
+        let message: string;
+        res.statusCode = 200;
 
-    if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
-        res.statusCode = 400;
-        res.end(message);
-
-        return;
-    }
-
-    const FILE_NAME: string[] = req.url.split('/').slice(-1);
-
-    switch (req.method) {
-        case 'GET': {
-            message = `get file: ${FILE_NAME}`;
-            break;
-        }
-        case 'POST': {
-            message = `post file: ${FILE_NAME}`;
-            break;
-        }
-        case 'DELETE': {
-            message = `delete file: ${FILE_NAME}`;
-            break;
-        }
-        default: {
+        if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
             res.statusCode = 400;
+            res.end(getMessage(res.statusCode));
+
+            return;
         }
 
-    }
+        const FILE_NAME: string[] = req.url.split('/').slice(-1);
 
-    console.log(message);
-    res.end(message);
-});
+        switch (req.method) {
+            case 'GET': {
+                message = `get file: ${FILE_NAME}`;
+                break;
+            }
+            case
+            'POST'
+            : {
+                message = `post file: ${FILE_NAME}`;
+                break;
+            }
+            case
+            'DELETE'
+            : {
+                message = `delete file: ${FILE_NAME}`;
+                break;
+            }
+            default: {
+                res.statusCode = 400;
+            }
+
+        }
+
+        message = getMessage(res.statusCode);
+        console.log(message);
+
+        res.end(message);
+    })
+;
 
 server.listen(PORT, () => {
-    console.log('server starts on port %s.', PORT);
+    console.log(`server starts on port ${PORT}.`);
 });
+
+const getMessage = (statusCode: number): string => {
+    return http.STATUS_CODES[`${statusCode}`];
+};
