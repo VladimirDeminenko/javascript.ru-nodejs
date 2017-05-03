@@ -30,8 +30,7 @@ var server = http.createServer((req, res) => {
                 break;
             }
             case
-            'POST'
-            : {
+            'POST': {
                 message = `post file: ${FILE_NAME}`;
                 break;
             }
