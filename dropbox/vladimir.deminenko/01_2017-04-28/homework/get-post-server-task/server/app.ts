@@ -6,6 +6,7 @@
 import fs = require("fs");
 import http = require("http");
 import mime = require("mime");
+import util = require("util");
 
 const PORT: number = 3000;
 
@@ -22,11 +23,11 @@ let server = http.createServer((req, res) => {
         return res.end(getMessage(req, res, fileName));
     }
 
-    res.statusCode = 200;
+    // res.statusCode = 200;
+    let path = `./files/${fileName}`;
 
     switch (req.method) {
         case 'GET': {
-            let path = `./files/${fileName}`;
             res.setHeader('Content-Type', mime.lookup(path));
 
             let file = fs.createReadStream(path, OPTIONS);
@@ -35,15 +36,15 @@ let server = http.createServer((req, res) => {
                 file.pipe(res);
             });
 
-            file.on("error", (error) => {
-                res.statusCode = 400;
-
-                if (error.code === 'ENOENT') {
-                    let tmp = error.message.split('\'')[0];
+            file.on("error", (err) => {
+                if (err.code === 'ENOENT') {
+                    res.statusCode = 404;
+                    let tmp = err.message.split('\'')[0];
 
                     res.end(`${tmp}"${fileName}"`);
                 }
                 else {
+                    res.statusCode = 400;
                     res.end(getMessage(req, res, fileName));
                 }
             });
@@ -51,17 +52,90 @@ let server = http.createServer((req, res) => {
             return;
         }
         case 'POST': {
+            fs.open(path, 'wx', (err, fd) => {
+                if (err) {
+                    if (err.code === 'EEXIST') {
+                        res.statusCode = 409;
+                    }
+                    else {
+                        res.statusCode = 400;
+                    }
+                }
+                else {
+                    fs.write(fd, 'First line', (err) => {
+                        if (err) {
+                            res.statusCode = 400;
+                        }
+                    });
+                }
+
+                return res.end(getMessage(req, res, fileName));
+            });
+
             break;
         }
         case 'DELETE': {
+            // fs.stat(path, function (err, stats) {
+            //     if (err) {
+            //         if (err.code === 'ENOENT') {
+            //             res.statusCode = 404;
+            //             let tmp = err.message.split('\'')[0];
+            //
+            //             res.end(`${tmp}"${fileName}"`);
+            //         }
+            //         else {
+            //             res.statusCode = 400;
+            //             res.end(getMessage(req, res, fileName));
+            //         }
+            //     }
+            //     else {
+            //         res.end(getMessage(req, res, fileName));
+            //     }
+            //
+            // });
+
+            fs.open(path, 'wx', (err, fd) => {
+                if (err) {
+                    if (err.code === 'EEXIST') {
+                        console.log('file already exists-2');
+                        return res.end(getMessage(req, res, fileName));
+                    }
+                    else {
+                        console.log(err.message);
+                        res.statusCode = 404;
+                        return res.end(getMessage(req, res, fileName));
+                    }
+                }
+
+                res.statusCode = 404;
+                return res.end(getMessage(req, res, fileName));
+            });
             break;
+
+            // file.on("open", () => {
+            //     // file.pipe(res);
+            // });
+            //
+            // file.on("error", (error) => {
+            //     if (error.code === 'ENOENT') {
+            //         res.statusCode = 404;
+            //
+            //         let tmp = error.message.split('\'')[0];
+            //
+            //         res.end(`${tmp}"${fileName}"`);
+            //     }
+            //     else {
+            //         res.statusCode = 400;
+            //         res.end(getMessage(req, res, fileName));
+            //     }
+            // });
+            // break;
         }
         default: {
             res.statusCode = 400;
+            res.end(getMessage(req, res, fileName));
         }
     }
-
-    res.end(getMessage(req, res, fileName));
 });
 
 server.listen(PORT, () => {
@@ -69,5 +143,5 @@ server.listen(PORT, () => {
 });
 
 const getMessage = (req, res, aFileName: string): string => {
-    return `${req.method} file "${aFileName}"; status: ${http.STATUS_CODES[res.statusCode]}.`;
+    return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}.`;
 };
