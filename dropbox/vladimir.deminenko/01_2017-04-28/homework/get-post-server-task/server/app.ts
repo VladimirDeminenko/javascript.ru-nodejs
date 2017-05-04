@@ -108,7 +108,7 @@ let server = http.createServer((req, res) => {
 });
 
 const getMessage = (req, res, aFileName: string): string => {
-    return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}.`;
+    return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}`;
 };
 
 server.listen(PORT, () => {
