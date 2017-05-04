@@ -49,7 +49,8 @@ let server = http.createServer((req, res) => {
                     rStream.pipe(res);
                 });
 
-                rStream.on("error", () => {
+                rStream.on("error", (err) => {
+                    console.error("rStream ERROR:", err.message);
                     res.statusCode = 400;
                     res.end(getMessage(req, res, fileName));
                 });
@@ -100,6 +101,7 @@ let server = http.createServer((req, res) => {
         case 'DELETE': {
             fs.unlink(path, (err) => {
                 if (err) {
+                    console.error("delete file ERROR:", err.message);
                     res.statusCode = 404;
                 }
 
