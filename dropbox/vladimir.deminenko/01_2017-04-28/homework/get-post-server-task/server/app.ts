@@ -30,13 +30,13 @@ let server = http.createServer((req, res) => {
 
             res.setHeader('Content-Type', mime.lookup(path));
 
-            let file = fs.createReadStream(path, READ_OPTIONS);
+            let rStream = fs.createReadStream(path, READ_OPTIONS);
 
-            file.on("open", () => {
-                file.pipe(res);
+            rStream.on("open", () => {
+                rStream.pipe(res);
             });
 
-            file.on("error", (err) => {
+            rStream.on("error", (err) => {
                 if (err.code === 'ENOENT') {
                     res.statusCode = 404;
                 }
