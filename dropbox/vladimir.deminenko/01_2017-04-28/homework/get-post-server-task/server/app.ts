@@ -6,7 +6,6 @@
 import fs = require("fs");
 import http = require("http");
 import mime = require("mime");
-import util = require("util");
 
 const PORT: number = 3000;
 
@@ -51,11 +50,10 @@ let server = http.createServer((req, res) => {
             break;
         }
         case 'POST': {
-            const SIZE_LIMIT = 1024 * 1024;
+            const FILE_SIZE_LIMIT: Number = 1024 * 1024;
+            const CONTENT_LENGTH: Number = parseInt(req.headers["content-length"]);
 
-            let contentLength = parseInt(req.headers["content-length"]);
-
-            if (contentLength > SIZE_LIMIT) {
+            if (CONTENT_LENGTH > FILE_SIZE_LIMIT) {
                 res.statusCode = 413;
                 return res.end(getMessage(req, res, fileName));
             }
@@ -83,7 +81,7 @@ let server = http.createServer((req, res) => {
                 wStream.on("error", (err) => {
                     console.error("wStream ERROR:", err.message);
                     res.statusCode = 400;
-                    return res.end(getMessage(req, res, fileName));
+                    res.end(getMessage(req, res, fileName));
                 });
 
                 return res.end(getMessage(req, res, fileName));
@@ -92,61 +90,15 @@ let server = http.createServer((req, res) => {
             break;
         }
         case 'DELETE': {
-            // fs.stat(path, function (err, stats) {
-            //     if (err) {
-            //         if (err.code === 'ENOENT') {
-            //             res.statusCode = 404;
-            //             let tmp = err.message.split('\'')[0];
-            //
-            //             res.end(`${tmp}"${fileName}"`);
-            //         }
-            //         else {
-            //             res.statusCode = 400;
-            //             res.end(getMessage(req, res, fileName));
-            //         }
-            //     }
-            //     else {
-            //         res.end(getMessage(req, res, fileName));
-            //     }
-            //
-            // });
-
-            fs.open(path, 'wx', (err, fd) => {
+            fs.unlink(path, (err) => {
                 if (err) {
-                    if (err.code === 'EEXIST') {
-                        console.log('file already exists-2');
-                        return res.end(getMessage(req, res, fileName));
-                    }
-                    else {
-                        console.log(err.message);
-                        res.statusCode = 404;
-                        return res.end(getMessage(req, res, fileName));
-                    }
+                    res.statusCode = 404;
                 }
 
-                res.statusCode = 404;
                 return res.end(getMessage(req, res, fileName));
             });
-            break;
 
-            // file.on("open", () => {
-            //     // file.pipe(res);
-            // });
-            //
-            // file.on("error", (error) => {
-            //     if (error.code === 'ENOENT') {
-            //         res.statusCode = 404;
-            //
-            //         let tmp = error.message.split('\'')[0];
-            //
-            //         res.end(`${tmp}"${fileName}"`);
-            //     }
-            //     else {
-            //         res.statusCode = 400;
-            //         res.end(getMessage(req, res, fileName));
-            //     }
-            // });
-            // break;
+            break;
         }
         default: {
             res.statusCode = 400;
@@ -155,10 +107,10 @@ let server = http.createServer((req, res) => {
     }
 });
 
-server.listen(PORT, () => {
-    console.log(`server starts on port ${PORT}.`);
-});
-
 const getMessage = (req, res, aFileName: string): string => {
     return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}.`;
 };
+
+server.listen(PORT, () => {
+    console.log(`server starts on port ${PORT}`);
+});
