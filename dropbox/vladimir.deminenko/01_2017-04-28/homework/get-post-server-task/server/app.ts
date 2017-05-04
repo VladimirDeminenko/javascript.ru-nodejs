@@ -34,7 +34,7 @@ let server = http.createServer((req, res) => {
 
             rStream.on("open", () => {
                 rStream.pipe(res);
-            });~
+            });
 
             rStream.on("error", (err) => {
                 if (err.code === 'ENOENT') {
