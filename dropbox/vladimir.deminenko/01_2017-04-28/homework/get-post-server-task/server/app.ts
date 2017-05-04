@@ -28,7 +28,7 @@ let server = http.createServer((req, res) => {
                 "autoClose": true
             };
 
-            res.setHeader('Content-Type', mime.lookup(path));
+            res.setHeader('Content-Type', mime.lookup(path).replace(/pdf$/, 'plain'));
 
             let rStream = fs.createReadStream(path, READ_OPTIONS);
 
