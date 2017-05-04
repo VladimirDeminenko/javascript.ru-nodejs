@@ -12,9 +12,6 @@ const PORT: number = 3000;
 
 let server = http.createServer((req, res) => {
     const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
-    const OPTIONS = {
-        'autoClose': true
-    };
 
     let fileName: string = req.url.split('/').slice(-1)[0];
 
@@ -28,9 +25,13 @@ let server = http.createServer((req, res) => {
 
     switch (req.method) {
         case 'GET': {
+            const READ_OPTIONS = {
+                "autoClose": true
+            };
+
             res.setHeader('Content-Type', mime.lookup(path));
 
-            let file = fs.createReadStream(path, OPTIONS);
+            let file = fs.createReadStream(path, READ_OPTIONS);
 
             file.on("open", () => {
                 file.pipe(res);
@@ -39,19 +40,26 @@ let server = http.createServer((req, res) => {
             file.on("error", (err) => {
                 if (err.code === 'ENOENT') {
                     res.statusCode = 404;
-                    let tmp = err.message.split('\'')[0];
-
-                    res.end(`${tmp}"${fileName}"`);
                 }
                 else {
                     res.statusCode = 400;
-                    res.end(getMessage(req, res, fileName));
                 }
+
+                res.end(getMessage(req, res, fileName));
             });
 
-            return;
+            break;
         }
         case 'POST': {
+            const SIZE_LIMIT = 1024 * 1024;
+
+            let contentLength = parseInt(req.headers["content-length"]);
+
+            if (contentLength > SIZE_LIMIT) {
+                res.statusCode = 413;
+                return res.end(getMessage(req, res, fileName));
+            }
+
             fs.open(path, 'wx', (err, fd) => {
                 if (err) {
                     if (err.code === 'EEXIST') {
@@ -60,14 +68,23 @@ let server = http.createServer((req, res) => {
                     else {
                         res.statusCode = 400;
                     }
+
+                    return res.end(getMessage(req, res, fileName));
                 }
-                else {
-                    fs.write(fd, 'First line', (err) => {
-                        if (err) {
-                            res.statusCode = 400;
-                        }
-                    });
-                }
+
+                const WRITE_OPTIONS = {
+                    "autoClose": true,
+                    "fd": fd
+                };
+
+                let wStream = fs.createWriteStream(path, WRITE_OPTIONS);
+                req.pipe(wStream);
+
+                wStream.on("error", (err) => {
+                    console.error("wStream ERROR:", err.message);
+                    res.statusCode = 400;
+                    return res.end(getMessage(req, res, fileName));
+                });
 
                 return res.end(getMessage(req, res, fileName));
             });
@@ -133,7 +150,7 @@ let server = http.createServer((req, res) => {
         }
         default: {
             res.statusCode = 400;
-            res.end(getMessage(req, res, fileName));
+            return res.end(getMessage(req, res, fileName));
         }
     }
 });
