@@ -23,7 +23,7 @@ let server = http.createServer((req, res) => {
         return res.end(getMessage(req, res, fileName));
     }
 
-    // res.statusCode = 200;
+    res.statusCode = 200;
     let path = `./files/${fileName}`;
 
     switch (req.method) {
