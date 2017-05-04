@@ -28,23 +28,31 @@ let server = http.createServer((req, res) => {
                 "autoClose": true
             };
 
-            res.setHeader('Content-Type', mime.lookup(path).replace(/\/pdf$/, '/plain'));
+            fs.stat(path, function (err, stats) {
+                if (err) {
+                    if (err.code === 'ENOENT') {
+                        res.statusCode = 404;
+                    }
+                    else {
+                        res.statusCode = 400;
+                    }
 
-            let rStream = fs.createReadStream(path, READ_OPTIONS);
-
-            rStream.on("open", () => {
-                rStream.pipe(res);
-            });
-
-            rStream.on("error", (err) => {
-                if (err.code === 'ENOENT') {
-                    res.statusCode = 404;
+                    return res.end(getMessage(req, res, fileName));
                 }
-                else {
+
+                res.setHeader('Content-Length', stats.size.toString());
+                res.setHeader('Content-Type', mime.lookup(path));
+
+                let rStream = fs.createReadStream(path, READ_OPTIONS);
+
+                rStream.on("open", () => {
+                    rStream.pipe(res);
+                });
+
+                rStream.on("error", () => {
                     res.statusCode = 400;
-                }
-
-                res.end(getMessage(req, res, fileName));
+                    res.end(getMessage(req, res, fileName));
+                });
             });
 
             break;
