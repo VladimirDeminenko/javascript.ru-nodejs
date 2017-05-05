@@ -1,7 +1,0 @@
-{
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0",
-    "server-count": "set NODE_PATH=./modules; && nodemon ./index.js",
-    "server-count-inspect": "set NODE_PATH=./modules; && nodemon --inspect ./index.js"
-  }
-}
