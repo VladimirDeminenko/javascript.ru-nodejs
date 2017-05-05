@@ -24,10 +24,6 @@ let server = http.createServer((req, res) => {
 
     switch (req.method) {
         case 'GET': {
-            const READ_OPTIONS = {
-                "autoClose": true
-            };
-
             fs.stat(path, function (err, stats) {
                 if (err) {
                     if (err.code === 'ENOENT') {
@@ -42,6 +38,10 @@ let server = http.createServer((req, res) => {
 
                 res.setHeader('Content-Length', stats.size.toString());
                 res.setHeader('Content-Type', mime.lookup(path));
+
+                const READ_OPTIONS = {
+                    "autoClose": true
+                };
 
                 let rStream = fs.createReadStream(path, READ_OPTIONS);
 
