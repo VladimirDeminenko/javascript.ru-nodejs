@@ -1,8 +1,9 @@
 // unit, integration, e2e
 
+const config = require('config');
 const assert = require('assert');
-const server = require('../dist/server/app').server;
-const dirName = require('../dist/server/app').getDirName();
+const server = require(`${config.serverPath}/app`).server;
+const dirName = require(`${config.serverPath}/app`).getDirName();
 const request = require('request');
 const fs = require('fs');
 
@@ -38,25 +39,51 @@ describe('server tests', () => {
     //     });
     // });
 
+    describe('read files by GET request', () => {
+        const FILE_NAMES = [
+            'empty',
+            'file001.md',
+            'file001.pdf',
+            'good-nigth.jpg'
+        ];
 
-    it('should return index.html', done => {
-        /*
-         1. запустить сервер (before)
-         2. сделать запрос
-         3. прочесть файл с диска
-         4. дождаться ответа от сервера
-         5. сравнить файл с диска с тем, что пришел с сервера
-         */
+        FILE_NAMES.forEach(fileName => {
+            it(`should return "files/${fileName}" file by request "${config.host}:${config.port}/${fileName}"`, done => {
+                request(`${config.host}:${config.port}/${fileName}`, function(error, response, body) {
+                    if (error) return done(error);
 
-        request('http://localhost:3000/file001.md', function(error, response, body) {
-            if (error) return done(error);
+                    const file = fs.readFileSync(`${config.filesRoot}/${fileName}`);
+                    assert.equal(body, file, `body !== ${fileName}`);
 
-            // const file = fs.readFileSync(`${__dirname}/../public/index.html`, { encoding: 'utf-8' });
-            const file = fs.readFileSync(`${__dirname}/../files/file001.md`, { encoding: 'utf-8' });
-            assert.equal(body, file, `body !== file001.md`);
-            // assert.equal(body, file, `body !== index.html`);
+                    done();
+                });
+            });
+        });
 
-            done();
+        let fileName = 'index.html';
+        describe(`read "public/${fileName}" file --> ${dirName}`, () => {
+
+            it(`should return "public/${fileName}" by request "${config.host}:${config.port}/"`, done => {
+                request(`${config.host}:${config.port}/`, function(error, response, body) {
+                    if (error) return done(error);
+
+                    const file = fs.readFileSync(`${config.publicRoot}/${fileName}`, {encoding: 'utf-8'});
+                    assert.equal(body, file, `body !== ${fileName}`);
+
+                    done();
+                });
+            });
+
+            it(`should return "public/${fileName}" by request "${config.host}:${config.port}/${fileName}"`, done => {
+                request(`${config.host}:${config.port}/${fileName}`, function(error, response, body) {
+                    if (error) return done(error);
+
+                    const file = fs.readFileSync(`${config.publicRoot}/${fileName}`, {encoding: 'utf-8'});
+                    assert.equal(body, file, `body !== ${fileName}`);
+
+                    done();
+                });
+            });
         });
     });
 });
