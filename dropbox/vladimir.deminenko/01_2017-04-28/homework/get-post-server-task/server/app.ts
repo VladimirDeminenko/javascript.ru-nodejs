@@ -3,14 +3,19 @@
  * Created by Vladimir Deminenko on 01.05.2017
  */
 
+import config = require("config");
 import fs = require("fs");
 import http = require("http");
 import mime = require("mime");
 
-const PORT: number = 3000;
+const FILE_SIZE_LIMIT: number = config.get('fileSizeLimit');
+const FILES_ROOT: string = config.get('filesRoot');
+const INDEX_FILE: string = config.get('indexFile');
+const PORT: number = config.get('port');
+const PUBLIC_ROOT: string = config.get('publicRoot');
 
 let server = http.createServer((req, res) => {
-    const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|^$|\.\./);
+    const BAD_FILE_NAME_EXPRESSION: RegExp = new RegExp(/\/|\.\./);
 
     let fileName: string = req.url.split('/').slice(-1)[0];
 
@@ -20,10 +25,16 @@ let server = http.createServer((req, res) => {
     }
 
     res.statusCode = 200;
-    let path = `./files/${fileName}`;
+    let path = `${FILES_ROOT}/${fileName}`;
 
     switch (req.method) {
         case 'GET': {
+            fileName = fileName || INDEX_FILE;
+
+            if (fileName == INDEX_FILE) {
+                path = `${PUBLIC_ROOT}/${INDEX_FILE}`;
+            }
+
             fs.stat(path, function (err, stats) {
                 if (err) {
                     if (err.code === 'ENOENT') {
@@ -43,23 +54,19 @@ let server = http.createServer((req, res) => {
                     "autoClose": true
                 };
 
-                let rStream = fs.createReadStream(path, READ_OPTIONS);
-
-                rStream.on("open", () => {
-                    rStream.pipe(res);
-                });
-
-                rStream.on("error", (err) => {
-                    console.error("rStream ERROR:", err.message);
-                    res.statusCode = 400;
-                    res.end(getMessage(req, res, fileName));
-                });
+                let rStream = fs.createReadStream(path, READ_OPTIONS)
+                    .on("error", (err) => {
+                        console.error("rStream ERROR:", err.message);
+                        res.statusCode = 400;
+                        res.end(getMessage(req, res, fileName));
+                    }).on("open", () => {
+                        rStream.pipe(res);
+                    });
             });
 
             break;
         }
         case 'POST': {
-            const FILE_SIZE_LIMIT: Number = 1024 * 1024;
             const CONTENT_LENGTH: Number = parseInt(req.headers["content-length"]);
 
             if (CONTENT_LENGTH > FILE_SIZE_LIMIT) {
@@ -101,7 +108,6 @@ let server = http.createServer((req, res) => {
         case 'DELETE': {
             fs.unlink(path, (err) => {
                 if (err) {
-                    console.error("delete file ERROR:", err.message);
                     res.statusCode = 404;
                 }
 
@@ -124,3 +130,13 @@ const getMessage = (req, res, aFileName: string): string => {
 server.listen(PORT, () => {
     console.log(`server starts on port ${PORT}`);
 });
+
+const getDirName = () => {
+    return process.cwd();
+};
+
+module.exports = {
+    getDirName: getDirName,
+    getMessage: getMessage,
+    server: server
+};
