@@ -128,8 +128,8 @@ const getMessage = (req, res, aFileName: string): string => {
 };
 
 server.listen(PORT, () => {
-    console.log(`server starts on port ${PORT}`);
-    console.log('filesRoot:', FILES_ROOT);
+    console.log(`\nserver starts on port ${PORT}`);
+    // console.log('filesRoot:', FILES_ROOT);
 });
 
 const getDirName = () => {

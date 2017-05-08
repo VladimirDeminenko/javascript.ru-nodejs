@@ -8,15 +8,20 @@ const BASE_ROOT_4_TESTS = `${process.cwd()}/dropbox/vladimir.deminenko/01_2017-0
 
 let port = 3000;
 let projectRoot = BASE_ROOT;
+let filesRoot = `${projectRoot}/files`;
+let dataRoot = `${filesRoot}/files`;
 
 if (process.env.START_CASE == "TEST") {
     projectRoot = BASE_ROOT_4_TESTS;
+    filesRoot = `${BASE_ROOT_4_TESTS}/test/files`;
+    dataRoot = `${BASE_ROOT_4_TESTS}/test/data`;
     port = 3001;
 }
 
 module.exports = {
+    dataRoot: dataRoot,
     fileSizeLimit: 1e6,
-    filesRoot: `${projectRoot}/files`,
+    filesRoot: filesRoot,
     host: 'http://localhost',
     indexFile: 'index.html',
     port: port,
@@ -25,3 +30,4 @@ module.exports = {
     serverPath: `${projectRoot}/dist/server`,
     testRoot: `${projectRoot}/test`
 };
+

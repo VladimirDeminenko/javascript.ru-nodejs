@@ -3,87 +3,152 @@
 const config = require('config');
 const assert = require('assert');
 const server = require(`${config.serverPath}/app`).server;
-const dirName = require(`${config.serverPath}/app`).getDirName();
 const request = require('request');
 const fs = require('fs');
+const FILES_ROOT = config.filesRoot;
+const DATA_ROOT = config.dataRoot;
+const PORT = config.port;
 
-describe('server tests', () => {
-    let app;
+const FILE_NAMES = [
+    'empty',
+    'file001.md',
+    'file001.pdf',
+    'good-nigth.jpg'
+];
 
+let runTests = () => {
+    describe('server tests', () => {
+        let app;
+
+        before(done => {
+            console.log('- server tests before');
+            app = server.listen(PORT, done);
+        });
+
+        after(done => {
+            console.log('- server tests after');
+            app.close(done);
+        });
+
+        testSuitGET(FILE_NAMES);
+        // testSuitPOST(FILE_NAMES);
+        // testSuitDELETE(FILE_NAMES);
+    });
+};
+
+let testSuitGET = (files) => {
     before(done => {
-        app = server.listen(3000, done);
-    });
+        console.log('  - testSuitGET() before');
+        removeFiles();
+        copyFiles();
 
-    after(done => {
-        app.close(done);
+        done();
     });
-
-    // describe('GET tests', () => {
-    //     it('check body', done => {
-    //         request('http://localhost:3000', function(error, res) {
-    //             if (error) return done(error);
-    //
-    //             assert.equal(res.body, 'GET file ""; status: 400 Bad Request');
-    //
-    //             done();
-    //         });
-    //     });
-    //
-    //     it('check statusCode', done => {
-    //         request('http://localhost:3000', function(error, res) {
-    //             if (error) return done(error);
-    //             assert.equal(res.statusCode, 400);
-    //
-    //             done();
-    //         });
-    //     });
-    // });
 
     describe('read files by GET request', () => {
-        const FILE_NAMES = [
-            'empty',
-            'file001.md',
-            'file001.pdf',
-            'good-nigth.jpg'
-        ];
-
-        FILE_NAMES.forEach(fileName => {
-            it(`should return "files/${fileName}" file by request "${config.host}:${config.port}/${fileName}"`, done => {
-                request(`${config.host}:${config.port}/${fileName}`, function(error, response, body) {
+        files.forEach(file => {
+            it(`check body: should return "files/${file}" file by request "${config.host}:${config.port}/${file}"`, done => {
+                request(`${config.host}:${config.port}/${file}`, (error, response, body) => {
                     if (error) return done(error);
 
-                    const file = fs.readFileSync(`${config.filesRoot}/${fileName}`);
-                    assert.equal(body, file, `body !== ${fileName}`);
-
+                    const path = fs.readFileSync(`${FILES_ROOT}/${file}`);
+                    assert.equal(body, path, `body !== ${file}`);
                     done();
                 });
             });
         });
 
-        let fileName = 'index.html';
-        describe(`read "public/${fileName}" file --> ${dirName}`, () => {
-
-            it(`should return "public/${fileName}" by request "${config.host}:${config.port}/"`, done => {
-                request(`${config.host}:${config.port}/`, function(error, response, body) {
+        let file = 'index.html';
+        describe(`check body: "public/${file}" file`, () => {
+            it(`check body: should return "public/${file}" by request "${config.host}:${config.port}/"`, done => {
+                request(`${config.host}:${config.port}/`, (error, response, body) => {
                     if (error) return done(error);
 
-                    const file = fs.readFileSync(`${config.publicRoot}/${fileName}`, {encoding: 'utf-8'});
-                    assert.equal(body, file, `body !== ${fileName}`);
-
+                    const path = fs.readFileSync(`${config.publicRoot}/${file}`, {encoding: 'utf-8'});
+                    assert.equal(body, path, `body !== ${file}`);
                     done();
                 });
             });
 
-            it(`should return "public/${fileName}" by request "${config.host}:${config.port}/${fileName}"`, done => {
-                request(`${config.host}:${config.port}/${fileName}`, function(error, response, body) {
+            it(`check body: should return "public/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
+                request(`${config.host}:${config.port}/${file}`, (error, response, body) => {
                     if (error) return done(error);
 
-                    const file = fs.readFileSync(`${config.publicRoot}/${fileName}`, {encoding: 'utf-8'});
-                    assert.equal(body, file, `body !== ${fileName}`);
-
+                    const path = fs.readFileSync(`${config.publicRoot}/${file}`, {encoding: 'utf-8'});
+                    assert.equal(body, path, `body !== ${file}`);
                     done();
+                });
+            });
+        });
+
+        describe(`check status code: "public/${file}" file`, () => {
+            files.slice(-1).forEach(file => {
+                it(`check status code: ${file} exists`, done => {
+                    request(`${config.host}:${config.port}/${file}`, (error, response) => {
+                        if (error) return done(error);
+
+                        assert.equal(response.statusCode, 200);
+                        done();
+                    });
+                });
+
+                it(`check status code: : ${file} not exists`, done => {
+                    file += '-not-exists';
+
+                    request(`${config.host}:${config.port}/${file}`, (error, response) => {
+                        if (error) return done(error);
+
+                        assert.equal(response.statusCode, 404);
+                        done();
+                    });
                 });
             });
         });
     });
-});
+};
+
+let testSuitPOST = (fileNames) => {
+    before(done => {
+        console.log('  - testSuitPOST() before');
+    });
+};
+
+let testSuitDELETE = (fileNames) => {
+    before(done => {
+        console.log('  - testSuitDELETE() before');
+    });
+};
+
+const removeFiles = () => {
+    fs.readdir(`${FILES_ROOT}`, (err, files) => {
+        if (err) {
+            return console.log('\n## removeFiles() read error:', err.message);
+        }
+
+        files.forEach(file => {
+            fs.unlink(`${FILES_ROOT}/${file}`, err => {
+                if (err) {
+                    return console.log('\n## removeFiles() delete error:', err.message);
+                }
+
+                console.log('\t- removeFiles():', file)
+            });
+        });
+    });
+};
+
+const copyFiles = () => {
+    fs.readdir(`${DATA_ROOT}`, (err, files) => {
+        if (err) {
+            return console.log('\n## copyFiles() read error:', err.message);
+        }
+
+        files.forEach(file => {
+            let rStream = fs.createReadStream(`${DATA_ROOT}/${file}`);
+            let wStream = fs.createWriteStream(`${FILES_ROOT}/${file}`);
+            rStream.pipe(wStream);
+        });
+    });
+};
+
+runTests();
