@@ -31,8 +31,9 @@ let runTests = () => {
         });
 
         testSuitGET(FILE_NAMES);
+        testSuitDELETE(FILE_NAMES);
+
         // testSuitPOST(FILE_NAMES);
-        // testSuitDELETE(FILE_NAMES);
     });
 };
 
@@ -48,8 +49,8 @@ let testSuitGET = (files) => {
     describe('read files by GET request', () => {
         files.forEach(file => {
             it(`check body: should return "files/${file}" file by request "${config.host}:${config.port}/${file}"`, done => {
-                request(`${config.host}:${config.port}/${file}`, (error, response, body) => {
-                    if (error) return done(error);
+                request(`${config.host}:${config.port}/${file}`, (err, response, body) => {
+                    if (err) return done(err);
 
                     const path = fs.readFileSync(`${FILES_ROOT}/${file}`);
                     assert.equal(body, path, `body !== ${file}`);
@@ -61,8 +62,8 @@ let testSuitGET = (files) => {
         let file = 'index.html';
         describe(`check body: "public/${file}" file`, () => {
             it(`check body: should return "public/${file}" by request "${config.host}:${config.port}/"`, done => {
-                request(`${config.host}:${config.port}/`, (error, response, body) => {
-                    if (error) return done(error);
+                request(`${config.host}:${config.port}/`, (err, response, body) => {
+                    if (err) return done(err);
 
                     const path = fs.readFileSync(`${config.publicRoot}/${file}`, {encoding: 'utf-8'});
                     assert.equal(body, path, `body !== ${file}`);
@@ -71,8 +72,8 @@ let testSuitGET = (files) => {
             });
 
             it(`check body: should return "public/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
-                request(`${config.host}:${config.port}/${file}`, (error, response, body) => {
-                    if (error) return done(error);
+                request(`${config.host}:${config.port}/${file}`, (err, response, body) => {
+                    if (err) return done(err);
 
                     const path = fs.readFileSync(`${config.publicRoot}/${file}`, {encoding: 'utf-8'});
                     assert.equal(body, path, `body !== ${file}`);
@@ -84,8 +85,8 @@ let testSuitGET = (files) => {
         describe(`check status code: "public/${file}" file`, () => {
             files.slice(-1).forEach(file => {
                 it(`check status code: ${file} exists`, done => {
-                    request(`${config.host}:${config.port}/${file}`, (error, response) => {
-                        if (error) return done(error);
+                    request(`${config.host}:${config.port}/${file}`, (err, response) => {
+                        if (err) return done(err);
 
                         assert.equal(response.statusCode, 200);
                         done();
@@ -93,10 +94,10 @@ let testSuitGET = (files) => {
                 });
 
                 it(`check status code: : ${file} not exists`, done => {
-                    file += '-not-exists';
+                    file = `not-exist-${file}`;
 
-                    request(`${config.host}:${config.port}/${file}`, (error, response) => {
-                        if (error) return done(error);
+                    request(`${config.host}:${config.port}/${file}`, (err, response) => {
+                        if (err) return done(err);
 
                         assert.equal(response.statusCode, 404);
                         done();
@@ -116,6 +117,35 @@ let testSuitPOST = (fileNames) => {
 let testSuitDELETE = (fileNames) => {
     before(done => {
         console.log('  - testSuitDELETE() before');
+        removeFiles();
+        copyFiles();
+        done();
+    });
+
+    describe('delete files by DELETE request', () => {
+        FILE_NAMES.slice(-2).forEach(file => {
+            file = `not-exist-${file}`;
+
+            it(`a try to delete a not exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
+                request.del(`${config.host}:${config.port}/${file}`, (err, response) => {
+                    if (err) return done(err);
+                    assert.equal(response.statusCode, 404);
+
+                    done();
+                });
+            });
+        });
+
+        FILE_NAMES.splice(0, 2).forEach(file => {
+            it(`a try to delete an exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
+                request.del(`${config.host}:${config.port}/${file}`, (err, response) => {
+                    if (err) return done(err);
+                    assert.equal(response.statusCode, 200);
+
+                    done();
+                });
+            });
+        });
     });
 };
 
