@@ -123,7 +123,7 @@ let testSuitDELETE = (fileNames) => {
     });
 
     describe('delete files by DELETE request', () => {
-        FILE_NAMES.slice(-2).forEach(file => {
+        FILE_NAMES.forEach(file => {
             file = `not-exist-${file}`;
 
             it(`a try to delete a not exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
@@ -136,7 +136,7 @@ let testSuitDELETE = (fileNames) => {
             });
         });
 
-        FILE_NAMES.splice(0, 2).forEach(file => {
+        FILE_NAMES.forEach(file => {
             it(`a try to delete an exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
                 request.del(`${config.host}:${config.port}/${file}`, (err, response) => {
                     if (err) return done(err);
