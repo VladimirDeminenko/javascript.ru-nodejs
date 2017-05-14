@@ -31,9 +31,8 @@ let runTests = () => {
         });
 
         testSuitGET(FILE_NAMES);
-        testSuitDELETE(FILE_NAMES);
-
         // testSuitPOST(FILE_NAMES);
+        // testSuitDELETE(FILE_NAMES);
     });
 };
 
@@ -111,6 +110,32 @@ let testSuitGET = (files) => {
 let testSuitPOST = (fileNames) => {
     before(done => {
         console.log('  - testSuitPOST() before');
+        removeFiles(done);
+    });
+
+    describe('write files by POST request', () => {
+        FILE_NAMES.forEach(file => {
+            it(`a try to write a not exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
+                request.post(`${config.host}:${config.port}/${file}`, (err, response) => {
+                    if (err) return done(err);
+
+                    console.log(`${config.host}:${config.port}/${file}`);
+
+                    assert.equal(response.statusCode, 409);
+                    console.log('', response.body);
+                    done();
+                });
+            });
+
+            // it(`a try to write an exist file "files/${file}" by request "${config.host}:${config.port}/${file}"`, done => {
+            //     request.post(`${config.host}:${config.port}/${file}`, (err, response) => {
+            //         if (err) return done(err);
+            //
+            //         assert.equal(response.statusCode, 409);
+            //         done();
+            //     });
+            // });
+        });
     });
 };
 
@@ -149,10 +174,14 @@ let testSuitDELETE = (fileNames) => {
     });
 };
 
-const removeFiles = () => {
+const removeFiles = (done) => {
     fs.readdir(`${FILES_ROOT}`, (err, files) => {
         if (err) {
-            return console.log('\n## removeFiles() read error:', err.message);
+            console.log('\n## removeFiles() read error:', err.message);
+
+            if (done) done();
+
+            return;
         }
 
         files.forEach(file => {
@@ -161,9 +190,11 @@ const removeFiles = () => {
                     return console.log('\n## removeFiles() delete error:', err.message);
                 }
 
-                console.log('\t- removeFiles():', file)
+                console.log('\t- removeFiles():', file);
             });
         });
+
+        if (done) done();
     });
 };
 

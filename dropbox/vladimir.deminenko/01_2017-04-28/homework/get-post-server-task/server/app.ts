@@ -24,17 +24,17 @@ let server = http.createServer((req, res) => {
         return res.end(getMessage(req, res, fileName));
     }
 
-    let path = `${FILES_ROOT}/${fileName}`;
+    let filePath = `${FILES_ROOT}/${fileName}`;
 
     switch (req.method) {
         case 'GET': {
             fileName = fileName || INDEX_FILE;
 
             if (fileName == INDEX_FILE) {
-                path = `${PUBLIC_ROOT}/${INDEX_FILE}`;
+                filePath = `${PUBLIC_ROOT}/${INDEX_FILE}`;
             }
 
-            sendFile(req, res, path);
+            sendFile(req, res, filePath);
 
             break;
         }
@@ -46,42 +46,17 @@ let server = http.createServer((req, res) => {
                 return res.end(getMessage(req, res, fileName));
             }
 
-            fs.open(path, 'wx', (err, fd) => {
-                if (err) {
-                    if (err.code === 'EEXIST') {
-                        res.statusCode = 409;
-                    }
-                    else {
-                        res.statusCode = 400;
-                    }
-
-                    return res.end(getMessage(req, res, fileName));
-                }
-
-                const WRITE_OPTIONS = {
-                    "autoClose": true,
-                    "fd": fd
-                };
-
-                let wStream = fs.createWriteStream(path, WRITE_OPTIONS);
-                req.pipe(wStream);
-
-                wStream.on("error", (err) => {
-                    console.error("wStream ERROR:", err.message);
-                    res.statusCode = 400;
-                    res.end(getMessage(req, res, fileName));
-                });
-
-                res.statusCode = 200;
-                return res.end(getMessage(req, res, fileName));
-            });
+            receiveFile(filePath, req, res);
 
             break;
         }
         case 'DELETE': {
-            fs.unlink(path, (err) => {
+            fs.unlink(filePath, (err) => {
                 if (err) {
                     res.statusCode = 404;
+                }
+                else {
+                    res.statusCode = 200;
                 }
 
                 return res.end(getMessage(req, res, fileName));
@@ -100,11 +75,68 @@ const getMessage = (req, res, aFileName: string): string => {
     return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}`;
 };
 
-const sendFile = (req, res, fileName) => {
-    const file = new fs.ReadStream(fileName);
+const receiveFile = (filePath, req, res) => {
+    fs.open(filePath, 'wx', (err, fd) => {
+        const fileName = filePath.split('/').slice(-1);
+
+        if (err) {
+            if (err.code === 'EEXIST') {
+                res.statusCode = 409;
+            }
+            else {
+                res.statusCode = 500;
+            }
+
+            return res.end(getMessage(req, res, fileName));
+        }
+
+        const WRITE_OPTIONS = {
+            "autoClose": true,
+            "fd": fd,
+            "flags": "wx"
+        };
+
+        const wStream = fs.createWriteStream(filePath, WRITE_OPTIONS);
+        let wStreamSize = 0;
+
+        wStream
+            .on("error", err => {
+                if (err.code === 'EEXIST') {
+                    res.statusCode = 409;
+                }
+                else {
+                    res.statusCode = 500;
+                }
+
+                res.end(getMessage(req, res, fileName));
+            })
+            .on('close', () => {
+                res.statusCode = 200;
+                res.end(getMessage(req, res, fileName));
+            });
+
+        req
+            .on('data', chunk => {
+                wStreamSize += chunk.length;
+
+                if (wStreamSize > FILE_SIZE_LIMIT) {
+                    fs.unlink(filePath, () => {});
+
+                    res.statusCode = 413;
+                    res.end(getMessage(req, res, fileName));
+                }
+            })
+            .pipe(wStream);
+    });
+};
+
+const sendFile = (req, res, filePath) => {
+    const file = fs.createReadStream(filePath);
 
     file
         .on('error', err => { // file.onError()
+            const fileName = filePath.split('/').slice(-1);
+
             if (err.code === 'ENOENT') {
                 res.statusCode = 404;
             }
@@ -115,7 +147,10 @@ const sendFile = (req, res, fileName) => {
             return res.end(getMessage(req, res, fileName));
         })
         .on('open', () => { // file.onOpen()
-            res.setHeader('Content-Type', mime.lookup(fileName));
+            res.setHeader('Content-Type', mime.lookup(filePath));
+        })
+        .on('close', () => { // file.onClose()
+            res.statusCode = 200;
         })
         .pipe(res)
         .on('close', () => { // res.onClose()
