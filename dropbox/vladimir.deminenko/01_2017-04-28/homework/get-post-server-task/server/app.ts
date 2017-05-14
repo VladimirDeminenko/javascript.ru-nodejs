@@ -24,7 +24,6 @@ let server = http.createServer((req, res) => {
         return res.end(getMessage(req, res, fileName));
     }
 
-    res.statusCode = 200;
     let path = `${FILES_ROOT}/${fileName}`;
 
     switch (req.method) {
@@ -35,34 +34,7 @@ let server = http.createServer((req, res) => {
                 path = `${PUBLIC_ROOT}/${INDEX_FILE}`;
             }
 
-            fs.stat(path, function (err, stats) {
-                if (err) {
-                    if (err.code === 'ENOENT') {
-                        res.statusCode = 404;
-                    }
-                    else {
-                        res.statusCode = 400;
-                    }
-
-                    return res.end(getMessage(req, res, fileName));
-                }
-
-                res.setHeader('Content-Length', stats.size.toString());
-                res.setHeader('Content-Type', mime.lookup(path));
-
-                const READ_OPTIONS = {
-                    "autoClose": true
-                };
-
-                let rStream = fs.createReadStream(path, READ_OPTIONS)
-                    .on("error", (err) => {
-                        console.error("rStream ERROR:", err.message);
-                        res.statusCode = 400;
-                        res.end(getMessage(req, res, fileName));
-                    }).on("open", () => {
-                        rStream.pipe(res);
-                    });
-            });
+            sendFile(req, res, path);
 
             break;
         }
@@ -100,6 +72,7 @@ let server = http.createServer((req, res) => {
                     res.end(getMessage(req, res, fileName));
                 });
 
+                res.statusCode = 200;
                 return res.end(getMessage(req, res, fileName));
             });
 
@@ -127,9 +100,30 @@ const getMessage = (req, res, aFileName: string): string => {
     return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}`;
 };
 
+const sendFile = (req, res, fileName) => {
+    const file = new fs.ReadStream(fileName);
+
+    res.setHeader('Content-Type', mime.lookup(fileName));
+
+    file.on('error', err => {
+        if (err.code === 'ENOENT') {
+            res.statusCode = 404;
+        }
+        else {
+            res.statusCode = 500;
+        }
+
+        return res.end(getMessage(req, res, fileName));
+    })
+        .pipe(res);
+
+    res.on('close', () => {
+        file.destroy();
+    });
+};
+
 server.listen(PORT, () => {
     console.log(`\nserver starts on port ${PORT}`);
-    // console.log('filesRoot:', FILES_ROOT);
 });
 
 const getDirName = () => {

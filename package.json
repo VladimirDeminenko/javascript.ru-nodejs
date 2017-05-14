@@ -57,6 +57,7 @@
     "yargs": "^5.0.0"
   },
   "devDependencies": {
+    "@angular/cli": "^1.0.3",
     "@types/node": "^7.0.14",
     "concurrently": "^3.4.0",
     "eslint": "^3.3.1",

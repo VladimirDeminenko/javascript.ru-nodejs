@@ -1,4 +1,4 @@
-# get-post-server-task
+﻿# get-post-server-task
 
 ### ЗАДАЧА - научиться работать с потоками (streams)
 Написать HTTP-сервер для загрузки и получения файлов
