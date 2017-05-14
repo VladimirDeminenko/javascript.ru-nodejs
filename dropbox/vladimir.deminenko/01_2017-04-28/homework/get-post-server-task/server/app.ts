@@ -21,7 +21,7 @@ let server = http.createServer((req, res) => {
 
     if (~req.url.slice(1).search(BAD_FILE_NAME_EXPRESSION)) {
         res.statusCode = 400;
-        return res.end(getMessage(req, res, fileName));
+        return res.end(getMessage(fileName, req, res));
     }
 
     let filePath = `${FILES_ROOT}/${fileName}`;
@@ -43,7 +43,7 @@ let server = http.createServer((req, res) => {
 
             if (CONTENT_LENGTH > FILE_SIZE_LIMIT) {
                 res.statusCode = 413;
-                return res.end(getMessage(req, res, fileName));
+                return res.end(getMessage(fileName, req, res));
             }
 
             receiveFile(filePath, req, res);
@@ -59,19 +59,19 @@ let server = http.createServer((req, res) => {
                     res.statusCode = 200;
                 }
 
-                return res.end(getMessage(req, res, fileName));
+                return res.end(getMessage(fileName, req, res));
             });
 
             break;
         }
         default: {
             res.statusCode = 400;
-            return res.end(getMessage(req, res, fileName));
+            return res.end(getMessage(fileName, req, res));
         }
     }
 });
 
-const getMessage = (req, res, aFileName: string): string => {
+const getMessage = (aFileName: string, req, res): string => {
     return `${req.method} file "${aFileName}"; status: ${res.statusCode} ${http.STATUS_CODES[res.statusCode]}`;
 };
 
@@ -87,7 +87,7 @@ const receiveFile = (filePath, req, res) => {
                 res.statusCode = 500;
             }
 
-            return res.end(getMessage(req, res, fileName));
+            return res.end(getMessage(fileName, req, res));
         }
 
         const WRITE_OPTIONS = {
@@ -105,14 +105,20 @@ const receiveFile = (filePath, req, res) => {
                     res.statusCode = 409;
                 }
                 else {
+                    console.error(err);
+
+                    if (!res.headersSent) {
+                        res.setHeader('Connection', 'close');
+                    }
+
                     res.statusCode = 500;
                 }
 
-                res.end(getMessage(req, res, fileName));
+                res.end(getMessage(fileName, req, res));
             })
             .on('close', () => {
                 res.statusCode = 200;
-                res.end(getMessage(req, res, fileName));
+                res.end(getMessage(fileName, req, res));
             });
 
         req
@@ -120,10 +126,22 @@ const receiveFile = (filePath, req, res) => {
                 wStreamSize += chunk.length;
 
                 if (wStreamSize > FILE_SIZE_LIMIT) {
-                    fs.unlink(filePath, () => {});
+                    wStream.close();
 
-                    res.statusCode = 413;
-                    res.end(getMessage(req, res, fileName));
+                    fs.unlink(filePath, (err) => {
+                        if (!res.headersSent) {
+                            res.setHeader('Connection', 'close');
+                        }
+
+                        if (err) {
+                            console.error(err);
+                            res.statusCode = 500;
+                            return res.end(getMessage(fileName, req, res));
+                        }
+
+                        res.statusCode = 413;
+                        res.end(getMessage(fileName, req, res));
+                    });
                 }
             })
             .pipe(wStream);
@@ -144,7 +162,7 @@ const sendFile = (req, res, filePath) => {
                 res.statusCode = 500;
             }
 
-            return res.end(getMessage(req, res, fileName));
+            return res.end(getMessage(fileName, req, res));
         })
         .on('open', () => { // file.onOpen()
             res.setHeader('Content-Type', mime.lookup(filePath));
