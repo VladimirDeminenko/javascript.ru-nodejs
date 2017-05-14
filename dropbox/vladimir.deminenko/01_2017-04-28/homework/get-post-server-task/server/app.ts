@@ -103,23 +103,24 @@ const getMessage = (req, res, aFileName: string): string => {
 const sendFile = (req, res, fileName) => {
     const file = new fs.ReadStream(fileName);
 
-    res.setHeader('Content-Type', mime.lookup(fileName));
+    file
+        .on('error', err => { // file.onError()
+            if (err.code === 'ENOENT') {
+                res.statusCode = 404;
+            }
+            else {
+                res.statusCode = 500;
+            }
 
-    file.on('error', err => {
-        if (err.code === 'ENOENT') {
-            res.statusCode = 404;
-        }
-        else {
-            res.statusCode = 500;
-        }
-
-        return res.end(getMessage(req, res, fileName));
-    })
-        .pipe(res);
-
-    res.on('close', () => {
-        file.destroy();
-    });
+            return res.end(getMessage(req, res, fileName));
+        })
+        .on('open', () => { // file.onOpen()
+            res.setHeader('Content-Type', mime.lookup(fileName));
+        })
+        .pipe(res)
+        .on('close', () => { // res.onClose()
+            file.destroy();
+        });
 };
 
 server.listen(PORT, () => {
