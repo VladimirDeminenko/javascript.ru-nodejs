@@ -1,0 +1,4 @@
+homework 3
+
+1. переписать тесты на async/await
+2*. read-stream-task.js

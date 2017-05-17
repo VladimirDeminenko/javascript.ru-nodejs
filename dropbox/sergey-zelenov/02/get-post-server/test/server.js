@@ -8,18 +8,18 @@ function sum(a, b) {
   return a + b;
 }
 
-// getPair(6) => [3, 3]
-function getPair(n) {
-  const base = Math.floor(n / 2);
-  return [base, n - base];
-}
-
 // sum(getPair(9));
 describe('sum tests', () => {
   it('should sum 2 numbers', () => {
     assert.equal(sum(2, 3), 5);
   });
 });
+
+// getPair(6) => [3, 3]
+function getPair(n) {
+  const base = Math.floor(n / 2);
+  return [base, n - base];
+}
 
 describe('getPair', () => {
   it('should split 9', () => {
