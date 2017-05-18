@@ -13,7 +13,7 @@ function readStream(stream) {
 
         return new Promise((resolve, reject) => {
             stream.on('data', chunk => {
-                return resolve(chunk);
+                resolve(chunk);
             });
 
             stream.on('error', error => {
