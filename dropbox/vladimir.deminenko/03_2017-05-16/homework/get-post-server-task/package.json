@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "compile": "concurrently \"tsc -w -p ./server\"",
+    "start": "nodemon ./dist/server/app.js"
+  }
+}

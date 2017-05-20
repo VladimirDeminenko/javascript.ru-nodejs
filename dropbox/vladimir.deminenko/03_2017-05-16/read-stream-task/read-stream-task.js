@@ -7,19 +7,52 @@ const fs = require('fs');
 // хотим читать данные из потока в цикле
 
 function readStream(stream) {
+    let missedErrors = [];
+
+    stream.on('error', onMissedError);
+
+    function onMissedError(err) {
+        missedErrors.push(err);
+    }
 
     return function() {
-        stream.removeAllListeners();
-
         return new Promise((resolve, reject) => {
-            stream.on('data', chunk => {
-                resolve(chunk);
-            });
+                let error = missedErrors.shift();
 
-            stream.on('error', error => {
-                reject(error);
-            });
-        });
+                if (error) {
+                    stream.removeListener('error', onMissedError);
+                    return reject(error);
+                }
+
+                stream.on('data', ondata);
+                stream.on('error', onerror);
+                stream.on('end', onend);
+                stream.resume();
+
+                function ondata(chunk) {
+                    stream.pause(); // until new promise is created, stream doesn't generate new data
+                    cleanup();
+                    resolve(chunk);
+                }
+
+                function onend() {
+                    cleanup();
+                    resolve(null);
+                }
+
+                function onerror(err) {
+                    stream.removeListener('error', onMissedError);
+                    cleanup();
+                    reject(err);
+                }
+
+                function cleanup() {
+                    stream.removeListener('data', ondata);
+                    stream.removeListener('error', onerror);
+                    stream.removeListener('end', onend);
+                }
+            }
+        );
     }
 }
 

@@ -1,8 +1,8 @@
-/*
-Error.stackTraceLimit = 10000;
+
+// Error.stackTraceLimit = 10000;
 require('trace');
 require('clarify');
-*/
+
 
 function f(ms) {
   setTimeout(() => {
