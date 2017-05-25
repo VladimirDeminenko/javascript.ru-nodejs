@@ -3,17 +3,26 @@
 const config = require('config');
 const assert = require('assert');
 const server = require(`${config.serverPath}/app`).server;
-const request = require('request');
+const request = require('request').defaults({
+    encoding: null
+});
+
+const rp = require('request-promise').defaults({
+    encoding: null,
+    resolveWithFullResponse: true
+});
+
 const fs = require('fs');
 const FILES_ROOT = config.filesRoot;
 const DATA_ROOT = config.dataRoot;
 const PORT = config.port;
 
+
 const FILE_NAMES = [
-    'empty',
-    'file001.md',
-    'file001.pdf',
-    'good-nigth.jpg'
+    'empty'
+    // 'file001.md',
+    // 'file001.pdf',
+    // 'good-nigth.jpg'
 ];
 
 let runTests = () => {
@@ -47,14 +56,18 @@ let testSuitGET = (files) => {
 
     describe('read files by GET request', () => {
         files.forEach(file => {
-            it(`check body: should return "files/${file}" file by request "${config.host}:${config.port}/${file}"`, done => {
-                request(`${config.host}:${config.port}/${file}`, (err, response, body) => {
-                    if (err) return done(err);
+            it(`check body: should return "files/${file}" file by request "${config.host}:${config.port}/${file}"`, async () => {
+                // request(`${config.host}:${config.port}/${file}`, (err, response, body) => {
+                //     if (err) return done(err);
+                //
+                //     const fileBody = fs.readFileSync(`${FILES_ROOT}/${file}`);
+                //     assert.equal(body, fileBody, `body !== ${file}`);
+                //     done();
+                // });
 
-                    const path = fs.readFileSync(`${FILES_ROOT}/${file}`);
-                    assert.equal(body, path, `body !== ${file}`);
-                    done();
-                });
+                const fileBody = fs.readFileSync(`${FILES_ROOT}/${file}`);
+                const response = await rp(`${config.host}:${config.port}/${file}`);
+                assert.equal(response.body, fileBody, `body !== ${file}`);
             });
         });
 
