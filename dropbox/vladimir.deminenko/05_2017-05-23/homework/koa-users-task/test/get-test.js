@@ -12,28 +12,14 @@ let rp = require('request-promise');
 let mongoose = require('mongoose');
 require('../models/users');
 let User = mongoose.model('User');
-let dbUsers = [];
 
 const URI = config.get('uri');
 
 mongoose.set('debug', config.get('debug'));
 
-function getUsers() {
-    let result = [];
-
-    [1, 2, 3, 4].forEach(num => {
-        let user = new User({
-            email: `user${num}@g${num}.com`,
-            displayName: `user${num}`
-        });
-
-        result.push(user);
-    });
-
-    return result;
-}
-
 describe('User REST API: GET', () => {
+    let existingUsers = [];
+
     before(() => {
         mongoose.connect(config.get('connection'), config.get('server'));
     });
@@ -44,9 +30,10 @@ describe('User REST API: GET', () => {
 
     beforeEach(async () => {
         await User.remove({});
-        await User.create(getUsers(), (err, usersArray) => {
-            dbUsers = usersArray;
-        });
+        await User.create(getUsers())
+            .then(users => {
+                existingUsers = users;
+            });
     });
 
     afterEach(() => {
@@ -61,16 +48,34 @@ describe('User REST API: GET', () => {
             await rp(options)
                 .then((body) => {
                     let users = Array.from(JSON.parse(body));
+                    assert.equal(users.length, existingUsers.length, "lengths are not equal");
 
                     users.forEach((user, idx) => {
-                        let dbUser = dbUsers[idx];
-
-                        assert.equal(user._id, dbUser._id, "_ids are not equal");
-                        assert.equal(user.email, dbUser.email, "emails are not equal");
-                        assert.equal(user.displayName, dbUser.displayName, "displayNames are not equal");
-                        assert.equal(new Date(user.createdAt).toString(), dbUser.createdAt.toString(), "created times are not equal");
+                        let existingUser = existingUsers[idx];
+                        assert.equal(user._id, existingUser._id, "_ids are not equal");
+                        assert.equal(user.email, existingUser.email, "emails are not equal");
+                        assert.equal(user.displayName, existingUser.displayName, "displayNames are not equal");
+                        assert.equal(new Date(user.createdAt).toString(), existingUser.createdAt.toString(), "created times are not equal");
                     });
                 });
         });
     });
 });
+
+function getUsers() {
+    const userCount = 4;
+    let result = [];
+
+    for (let i = 0; i < userCount;) {
+        ++i;
+
+        let user = new User({
+            email: `user${i}@g${i}.com`,
+            displayName: `User ${i}`
+        });
+
+        result.push(user);
+    }
+
+    return result;
+}
