@@ -22,21 +22,15 @@ mongoose.connect(config.get('connection'), config.get('server'));
 
 router.get('/users',
     async (ctx, next) => {
-        ctx.body = await User
-            .find({})
-            // .sort(
-            //     {
-            //         createdAt: 1
-            //     }
-            // )
-            // .select({
-            //     email: 1,
-            //     displayName: 1
-            // })
-        ;
-
+        ctx.body = await User.find({});
         await next();
     });
+
+router.get('/users/:id', async (ctx, next) => {
+    ctx.body = await User.findById(ctx.params.id) || ctx.throw(404);
+
+    await next();
+});
 
 app.use(router.routes());
 
