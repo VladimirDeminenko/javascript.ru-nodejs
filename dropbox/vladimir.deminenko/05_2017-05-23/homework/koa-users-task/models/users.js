@@ -14,13 +14,13 @@
             email: {
                 type: mongoose.SchemaTypes.Email,
                 unique: true,
-                required: 'Такой email уже есть'
+                required: true
             },
             displayName: {
                 type: String,
                 trim: true,
-                unique: true,
-                required: 'Такое имя уже есть'
+                unique: false,
+                required: true
             }
         },
         {
