@@ -84,7 +84,6 @@ describe('User REST API: GET', () => {
             await reqPromise(options)
                 .then((response) => {
                     let user = response.body;
-                    assert.equal(response.statusCode, 200, "status codes are not equal");
                     userUtils.compareUsers(user, existingUser);
                 });
         });
