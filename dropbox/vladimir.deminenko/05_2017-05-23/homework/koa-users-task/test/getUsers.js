@@ -16,7 +16,7 @@
         simple: false
     });
 
-    let userUtils = require('./lib/user-utils');
+    let userUtils = require('./lib/userUtils');
 
     let mongoose = require('mongoose');
     require('../models/users');
