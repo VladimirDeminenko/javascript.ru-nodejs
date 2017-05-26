@@ -5,7 +5,7 @@
 
 let config = require('config');
 
-if (config.get('trace')) require(`${config.get('libsPath')}/trace`);
+if (config.get('trace')) require(`${config.get('libPath')}/trace`);
 
 let mongoose = require('mongoose');
 require('./models/users');

@@ -8,7 +8,7 @@ const PORT = 3000;
 module.exports = {
     connection: "mongodb://localhost:27017/05-koa-users-task",
     debug: false,
-    libsPath: "../../../libs",
+    libPath: "../../../lib",
     server: {
         socketOptions: {
             keepAlive: 1
