@@ -11,15 +11,15 @@
     require('../../models/users');
     let User = mongoose.model('User');
 
-    let checkUser = (actualUser, expectedUser) => {
+    let compareUsers = (actualUser, expectedUser) => {
         assert.equal(actualUser._id, expectedUser._id, "_ids are not equal");
         assert.equal(actualUser.email, expectedUser.email, "emails are not equal");
         assert.equal(actualUser.displayName, expectedUser.displayName, "displayNames are not equal");
         assert.equal(new Date(actualUser.createdAt).toString(), expectedUser.createdAt.toString(), "created times are not equal");
     };
 
-    let getRandomIndexFor = array => {
-        return Math.floor(Math.random() * array.length);
+    let getRandomUserFrom = users => {
+        return users[Math.floor(Math.random() * users.length)];
     };
 
     let getUsers = () => {
@@ -41,8 +41,8 @@
     };
 
     module.exports = {
-        checkUser: checkUser,
-        getRandomIndexFor: getRandomIndexFor,
+        compareUsers: compareUsers,
+        getRandomUserFrom: getRandomUserFrom,
         getUsers: getUsers
     };
 })();

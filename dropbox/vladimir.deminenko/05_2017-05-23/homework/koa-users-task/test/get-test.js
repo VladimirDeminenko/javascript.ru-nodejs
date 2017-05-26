@@ -69,18 +69,13 @@ describe('User REST API: GET', () => {
 
                     users.forEach((user, idx) => {
                         let existingUser = existingUsers[idx];
-                        userUtils.checkUser(user, existingUser);
+                        userUtils.compareUsers(user, existingUser);
                     });
                 });
         });
 
         it('should return user by id', async () => {
-            let randomIdx = userUtils.getRandomIndexFor(existingUsers);
-            let existingUser = existingUsers[randomIdx];
-
-            // existingUsers.forEach(async existingUser => {  // 1. this two lines to test async forEach()
-            //     existingUser.displayName += 'x';           // 2.
-
+            let existingUser = userUtils.getRandomUserFrom(existingUsers);
             let options = {
                 uri: `${URI}/users/${existingUser._id}`,
                 json: true
@@ -90,10 +85,8 @@ describe('User REST API: GET', () => {
                 .then((response) => {
                     let user = response.body;
                     assert.equal(response.statusCode, 200, "status codes are not equal");
-                    userUtils.checkUser(user, existingUser);
+                    userUtils.compareUsers(user, existingUser);
                 });
-
-            // });
         });
     });
 });
