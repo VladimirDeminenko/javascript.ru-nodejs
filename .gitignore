@@ -47,6 +47,6 @@ ts-node-boilerplate
 .dropbox.cache
 .dropbox
 desktop.ini
-/dropbox/sergey-zelenov/
+#/dropbox/sergey-zelenov/
 /dropbox/vladimir.deminenko/**/dist/
 /dropbox/vladimir.deminenko/**/files/

@@ -1,5 +1,0 @@
---reporter nyan
---colors
---timeout 10000
---require test/setup.js
---recursive
